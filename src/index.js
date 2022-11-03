@@ -1,20 +1,23 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
+import "react-toastify/dist/ReactToastify.css";
 import Error from "./components/Error";
 import { createBrowserRouter, RouterProvider, Route } from "react-router-dom";
-import Registration from "./pages/Registration";
-import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Message from "./pages/Message";
-import Dashboard from "./pages/Dashboard";
 import Notification from "./pages/Notification";
 import Settings from "./pages/Settings";
+
+//Private Routes
+import PrivateRoute from "./PrivateRoutes/PrivateRoute";
+import PrivateLogin from "./PrivateRoutes/PrivateLogin";
+import PrivateRegistration from "./PrivateRoutes/PrivateRegistration";
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Dashboard />,
+    element: <PrivateRoute />,
     errorElement: <Error />,
     children: [
       {
@@ -37,11 +40,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/registration",
-    element: <Registration />,
+    element: <PrivateRegistration />,
   },
   {
     path: "/login",
-    element: <Login />,
+    element: <PrivateLogin />,
   },
   {
     path: "/message",

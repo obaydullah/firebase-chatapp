@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   AiOutlineHome,
   AiFillMessage,
@@ -6,18 +6,43 @@ import {
   AiFillNotification,
 } from "react-icons/ai";
 import { FiLogOut } from "react-icons/fi";
-import { Link, NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
+import auth from "../firebaseConfig";
 
 export default function Sidebar() {
+  let navigate = useNavigate();
+  const [userName, setUserName] = useState("");
+  const [profilePhotoURL, setProfilePhotoURL] = useState("");
+
+  const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        navigate("/login");
+      })
+      .catch((error) => {});
+  };
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setUserName(user.displayName);
+        setProfilePhotoURL(user.photoURL);
+      }
+    });
+  }, [auth, profilePhotoURL]);
+
   return (
     <div className=" bg-green-600 text-white p-4 sm:fixed sm:left-0 sm:bottom-0 sm:w-screen sm:h-[55px] sml:w-[186px] sml:static sml:h-auto">
       <div className="h-full flex gap-12 sm:flex-row sml:flex-col sm:justify-between sml:justify-start">
         <div className="flex flex-col items-center">
           <img
-            src="./images/profile.png"
+            src={profilePhotoURL}
             alt=""
-            className="mb-4 sm:h-[50px] sm:w-[50px] sm:-mt-4 sml:h-[70px] sml:w-[70px] sml:mt-4 "
+            className="mb-2 sm:h-[50px] sm:w-[50px] sm:-mt-4 sml:h-[70px] sml:w-[70px] sml:mt-4 rounded-full"
           />
+          <h3 className="text-center"> {userName}</h3>
         </div>
         <div className="flex items-center sm:text-2xl sml:text-4xl sm:flex-row sml:flex-col">
           <NavLink
@@ -75,7 +100,7 @@ export default function Sidebar() {
         </div>
 
         <div className="mx-auto mb-4 cursor-pointer sm:justify-center sm:mr-4 sm:text-2xl sml:mr-auto sml:text-4xl">
-          <FiLogOut />
+          <FiLogOut onClick={handleLogout} />
         </div>
       </div>
     </div>

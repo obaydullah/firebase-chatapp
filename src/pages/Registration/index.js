@@ -2,8 +2,15 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AiFillEye } from "react-icons/ai";
 import { BsFillEyeSlashFill } from "react-icons/bs";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { PulseLoader } from "react-spinners";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  updateProfile,
+} from "firebase/auth";
+import { set, ref } from "firebase/database";
 import auth from "../../firebaseConfig";
+import { db } from "../../firebaseConfig";
 
 export default function Registration() {
   const navigate = useNavigate();
@@ -17,6 +24,9 @@ export default function Registration() {
   const [emailError, setEmailError] = useState("");
   const [passError, setPassError] = useState("");
   const [fullNameErr, setFullNameErr] = useState("");
+
+  const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleShowPass = () => {
     setShowPass((prevState) => {
@@ -46,28 +56,50 @@ export default function Registration() {
     if (password.trim().length <= 4) {
       setPassError("Password length should be grater than 4");
     }
-    //Form Validation End
 
     // Firebase Login with Email and Password
 
+    setLoading(true);
+
     createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
-        const user = userCredential.user;
-        user.displayName = fullName;
+        updateProfile(auth.currentUser, {
+          displayName: fullName,
+          photoURL: "./images/profile-pic.png",
+        })
+          .then(() => {
+            sendEmailVerification(auth.currentUser)
+              .then(() => {
+                setLoading(false);
+                setSuccess(
+                  "Registration Successfull, please verify your email to continue"
+                );
+              })
+              .then(() => {
+                const { displayName, email, photoURL, uid } =
+                  userCredential.user;
 
-        //After Registration navigate to login page
-        setTimeout(() => {
-          return navigate("/login");
-        });
+                set(ref(db, "users/" + uid), {
+                  username: displayName,
+                  email: email,
+                  profile_picture: photoURL,
+                });
 
-        // ...
+                setTimeout(() => {
+                  return navigate("/login");
+                }, 3000);
+              });
+          })
+          .catch((error) => {});
       })
       .catch((error) => {
+        setLoading(false);
+
         const errorCode = error.code;
-        const errorMessage = error.message;
-        // ..
+        if (errorCode.includes("auth/email-already-in-use")) {
+          setEmailError("Email is already in use");
+        }
       });
-    // Firebase Login with Email and Password end
   };
 
   return (
@@ -77,9 +109,18 @@ export default function Registration() {
           <h2 className="sm:text-lg md:text-3xl font-bold text-green-500 mb-2">
             Get easily with easily Register
           </h2>
-          <p className="sm:text-[12px] sm:mb-4 md:text-sm text-gray-500 md:mb-10">
+          <p className="sm:text-[12px] sm:mb-4 md:text-sm text-gray-500 md:mb-8">
             Free register and you can enjoy it{" "}
           </p>
+
+          {success ? (
+            <p className="mt-1 text-sm bg-green-500 text-white p-1 mb-6">
+              {success}
+            </p>
+          ) : (
+            ""
+          )}
+
           <div className="mb-6 relative">
             <label
               htmlFor="email"
@@ -87,6 +128,7 @@ export default function Registration() {
             >
               Email
             </label>
+
             <input
               type="email"
               name="email"
@@ -133,7 +175,7 @@ export default function Registration() {
               Password
             </label>
             <input
-              type={showPass ? "password" : "text"}
+              type={showPass ? "text" : "password"}
               name="password"
               id="password"
               className="border border-solid border-gray-500 rounded px-7 py-4 focus:outline-none w-full"
@@ -161,13 +203,17 @@ export default function Registration() {
             )}
           </div>
 
-          <button
-            onClick={handleRegistration}
-            type="submit"
-            className="bg-green-700 text-white block rounded-full text-lg w-full p-4 sml:mt-4 sml:p-2 md:mt-10 md:p-4"
-          >
-            Sign up
-          </button>
+          {loading ? (
+            <PulseLoader color="green" className="text-center text-green-600" />
+          ) : (
+            <button
+              onClick={handleRegistration}
+              type="submit"
+              className="bg-green-700 text-white block rounded-full text-lg w-full p-4 sml:mt-4 sml:p-2 md:mt-6 md:p-4"
+            >
+              Sign up
+            </button>
+          )}
 
           <p className="mt-4">
             Already have an account ?{" "}

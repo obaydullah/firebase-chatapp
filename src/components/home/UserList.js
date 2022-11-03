@@ -1,7 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BiDotsVerticalRounded } from "react-icons/bi";
+import { getDatabase, ref, onValue } from "firebase/database";
+import { db } from "../../firebaseConfig";
+import auth from "../../firebaseConfig";
 
 export default function UserList() {
+  const [userLists, setUserLists] = useState([]);
+
+  useEffect(() => {
+    const usersRef = ref(db, "users/");
+    onValue(usersRef, (snapshot) => {
+      let usersArr = [];
+
+      snapshot.forEach((user) => {
+        if (user.key !== auth.currentUser.uid) {
+          usersArr.push(user.val());
+        }
+      });
+
+      setUserLists(usersArr);
+    });
+  }, []);
+
   return (
     <>
       {/* UserList  Start */}
@@ -12,68 +32,26 @@ export default function UserList() {
         </div>
 
         {/* Single User List Start */}
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[50px] w-[50px]"
-          />
-          <div>
-            <h2 className="text-base font-bold">Friends Reunion</h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <p className="text-[10px] text-gray-400">Today: 9.00pm</p>
-        </div>
 
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[50px] w-[50px]"
-          />
-          <div>
-            <h2 className="text-base font-bold">Friends Reunion</h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
+        {userLists.map((user, index) => (
+          <div
+            key={index}
+            className={`flex justify-between items-center border-b border-solid border-gray-300 py-2 ${
+              index === userLists.length - 1 && "border-b-0"
+            }`}
+          >
+            <img
+              src={user.profile_picture}
+              alt=""
+              className="h-[50px] w-[50px] mr-3"
+            />
+            <div className="self-start grow">
+              <h2 className="text-base font-bold">{user.username}</h2>
+              <p className="text-sm text-gray-500">Hi guys, Whats up</p>
+            </div>
+            <p className="text-[10px] text-gray-400">Today: 9.00pm</p>
           </div>
-          <p className="text-[10px] text-gray-400">Today: 9.00pm</p>
-        </div>
-
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[50px] w-[50px]"
-          />
-          <div>
-            <h2 className="text-base font-bold">Friends Reunion</h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <p className="text-[10px] text-gray-400">Today: 9.00pm</p>
-        </div>
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[50px] w-[50px]"
-          />
-          <div>
-            <h2 className="text-base font-bold">Friends Reunion</h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <p className="text-[10px] text-gray-400">Today: 9.00pm</p>
-        </div>
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[50px] w-[50px]"
-          />
-          <div>
-            <h2 className="text-base font-bold">Friends Reunion</h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <p className="text-[10px] text-gray-400">Today: 9.00pm</p>
-        </div>
+        ))}
       </div>
     </>
   );
