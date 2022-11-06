@@ -1,8 +1,45 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { BsSearch } from "react-icons/bs";
 import { BiDotsVerticalRounded } from "react-icons/bi";
+import { ref, onValue, set, push, remove } from "firebase/database";
+import { db } from "../../firebaseConfig";
+import auth from "../../firebaseConfig";
 
 export default function FriendRequest() {
+  const [friendReq, setFriendReq] = useState([]);
+  const [date, setDate] = useState(new Date().getDate());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [year, setYear] = useState(new Date().getFullYear());
+
+  useEffect(() => {
+    const usersRef = ref(db, "friendrequest/");
+    onValue(usersRef, (snapshot) => {
+      let usersArr = [];
+
+      snapshot.forEach((user) => {
+        if (user.key == auth.currentUser.uid) {
+          usersArr.push({ ...user.val(), id: user.key });
+        }
+      });
+
+      setFriendReq(usersArr);
+    });
+  }, []);
+
+  const handleAcceptReq = (friends) => {
+    set(push(ref(db, "friends/")), {
+      sendername: friends.sendername,
+      senderid: friends.senderid,
+      receiverid: friends.receiverid,
+      receivername: friends.receivername,
+      date: `${date}/${month}/${year}`,
+      receiverphoto: friends.receiverphoto,
+      senderphoto: friends.senderphoto,
+    }).then(() => {
+      remove(ref(db, "friendrequest/" + friends.id));
+    });
+  };
+
   return (
     <div className="h-[365px] overflow-hidden">
       {/* Friend Request Start */}
@@ -13,86 +50,33 @@ export default function FriendRequest() {
         </div>
 
         {/* Single Friend Request Start */}
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[60px] w-[60px]"
-          />
-          <div className="sm:mr-0 sml:mr-10">
-            <h2 className="font-bold sm:text-base sml:text-xl ">
-              Friends Reunioin
-            </h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
+
+        {friendReq.map((fr, index) => (
+          <div
+            className={`flex justify-between items-center border-b border-solid border-gray-300 py-2 ${
+              index === friendReq.length - 1 && "border-b-0"
+            }`}
+            key={index}
+          >
+            <img
+              src={fr.senderphoto}
+              alt=""
+              className="h-[60px] w-[60px] rounded-full"
+            />
+            <div className="sm:mr-0 sml:mr-10">
+              <h2 className="font-bold sm:text-base sml:text-xl ">
+                {fr.sendername}
+              </h2>
+              <p className="text-sm text-gray-500">Hi guys, Whats up</p>
+            </div>
+            <button
+              className="bg-green-600 text-white px-4 py-2 rounded text-base"
+              onClick={() => handleAcceptReq(fr)}
+            >
+              Accept
+            </button>
           </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded text-base">
-            Accept
-          </button>
-        </div>
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[60px] w-[60px]"
-          />
-          <div className="sm:mr-0 sml:mr-10">
-            <h2 className="font-bold sm:text-base sml:text-xl ">
-              Friends Reunioin
-            </h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded text-base">
-            Accept
-          </button>
-        </div>
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[60px] w-[60px]"
-          />
-          <div className="sm:mr-0 sml:mr-10">
-            <h2 className="font-bold sm:text-base sml:text-xl ">
-              Friends Reunioin
-            </h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded text-base">
-            Accept
-          </button>
-        </div>
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[60px] w-[60px]"
-          />
-          <div className="sm:mr-0 sml:mr-10">
-            <h2 className="font-bold sm:text-base sml:text-xl ">
-              Friends Reunioin
-            </h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded text-base">
-            Accept
-          </button>
-        </div>
-        <div className="flex justify-between items-center border-b border-solid border-gray-300 py-2">
-          <img
-            src="./images/profile.png"
-            alt=""
-            className="h-[60px] w-[60px]"
-          />
-          <div className="sm:mr-0 sml:mr-10">
-            <h2 className="font-bold sm:text-base sml:text-xl ">
-              Friends Reunioin
-            </h2>
-            <p className="text-sm text-gray-500">Hi guys, Whats up</p>
-          </div>
-          <button className="bg-green-600 text-white px-4 py-2 rounded text-base">
-            Accept
-          </button>
-        </div>
+        ))}
       </div>
     </div>
   );

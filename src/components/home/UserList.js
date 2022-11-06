@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from "react";
 import { BiDotsVerticalRounded } from "react-icons/bi";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { ref, onValue, set } from "firebase/database";
+import { onAuthStateChanged } from "firebase/auth";
 import { db } from "../../firebaseConfig";
 import auth from "../../firebaseConfig";
 
 export default function UserList() {
   const [userLists, setUserLists] = useState([]);
+  const [pendingStr, setPendingStr] = useState("");
+  const [friendStr, setFriendStr] = useState("");
+  const [currentUserPhoto, setCurrentUserPhoto] = useState("");
+
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setCurrentUserPhoto(user.photoURL);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     const usersRef = ref(db, "users/");
@@ -14,13 +26,61 @@ export default function UserList() {
 
       snapshot.forEach((user) => {
         if (user.key !== auth.currentUser.uid) {
-          usersArr.push(user.val());
+          usersArr.push({ ...user.val(), id: user.key });
         }
       });
 
       setUserLists(usersArr);
     });
   }, []);
+
+  useEffect(() => {
+    const usersRef = ref(db, "friendrequest/");
+    onValue(usersRef, (snapshot) => {
+      let pendingString = "";
+
+      snapshot.forEach((user) => {
+        if (auth.currentUser.uid === user.val().senderid) {
+          pendingString += user.val().senderid + user.val().receiverid;
+        }
+        if (auth.currentUser.uid === user.val().receiverid) {
+          pendingString += user.val().receiverid + user.val().senderid;
+        }
+      });
+
+      setPendingStr(pendingString);
+    });
+  }, []);
+
+  useEffect(() => {
+    const usersRef = ref(db, "friends/");
+    onValue(usersRef, (snapshot) => {
+      let friendStr = "";
+
+      snapshot.forEach((user) => {
+        if (auth.currentUser.uid === user.val().senderid) {
+          friendStr += user.val().senderid + user.val().receiverid;
+        }
+        if (auth.currentUser.uid === user.val().receiverid) {
+          friendStr += user.val().receiverid + user.val().senderid;
+        }
+      });
+
+      setFriendStr(friendStr);
+    });
+  }, []);
+
+  const handleFriendReq = (user) => {
+    set(ref(db, "friendrequest/" + user.id), {
+      sendername: auth.currentUser.displayName,
+      senderid: auth.currentUser.uid,
+      receiverid: user.id,
+      receivername: user.username,
+      id: user.id,
+      receiverphoto: user.profile_picture,
+      senderphoto: currentUserPhoto,
+    });
+  };
 
   return (
     <>
@@ -43,13 +103,29 @@ export default function UserList() {
             <img
               src={user.profile_picture}
               alt=""
-              className="h-[50px] w-[50px] mr-3"
+              className="h-[50px] w-[50px] mr-3 rounded-full"
             />
             <div className="self-start grow">
               <h2 className="text-base font-bold">{user.username}</h2>
               <p className="text-sm text-gray-500">Hi guys, Whats up</p>
             </div>
-            <p className="text-[10px] text-gray-400">Today: 9.00pm</p>
+
+            {pendingStr.includes(auth.currentUser.uid + user.id) ? (
+              <button className="bg-green-600 text-white p-2 rounded text-sm">
+                Pending
+              </button>
+            ) : friendStr.includes(auth.currentUser.uid + user.id) ? (
+              <button className="bg-green-600 text-white p-2 rounded text-sm">
+                Friend
+              </button>
+            ) : (
+              <button
+                className="bg-green-600 text-white p-2 rounded text-sm"
+                onClick={() => handleFriendReq(user)}
+              >
+                Send request
+              </button>
+            )}
           </div>
         ))}
       </div>
