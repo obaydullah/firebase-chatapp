@@ -9,6 +9,7 @@ export default function UserList() {
   const [userLists, setUserLists] = useState([]);
   const [pendingStr, setPendingStr] = useState("");
   const [friendStr, setFriendStr] = useState("");
+  const [blockedStr, setBlockedStr] = useState("");
   const [currentUserPhoto, setCurrentUserPhoto] = useState("");
 
   useEffect(() => {
@@ -70,6 +71,24 @@ export default function UserList() {
     });
   }, []);
 
+  useEffect(() => {
+    const blockedRef = ref(db, "blockedlist/");
+    onValue(blockedRef, (snapshot) => {
+      let blockedString = "";
+
+      snapshot.forEach((user) => {
+        if (auth.currentUser.uid === user.val().blockedbyid) {
+          blockedString += user.val().blockedbyid + user.val().blockedid;
+        }
+        if (auth.currentUser.uid === user.val().blockedid) {
+          blockedString += user.val().blockedid + user.val().blockedbyid;
+        }
+      });
+
+      setBlockedStr(blockedString);
+    });
+  }, []);
+
   const handleFriendReq = (user) => {
     set(ref(db, "friendrequest/" + user.id), {
       sendername: auth.currentUser.displayName,
@@ -117,6 +136,10 @@ export default function UserList() {
             ) : friendStr.includes(auth.currentUser.uid + user.id) ? (
               <button className="bg-green-600 text-white p-2 rounded text-sm">
                 Friend
+              </button>
+            ) : blockedStr.includes(auth.currentUser.uid + user.id) ? (
+              <button className="bg-green-600 text-white p-2 rounded text-sm">
+                Blocked
               </button>
             ) : (
               <button

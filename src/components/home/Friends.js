@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { BiDotsVerticalRounded } from "react-icons/bi";
-import { ref, onValue, set } from "firebase/database";
+import { ref, onValue, set, push, remove } from "firebase/database";
 import { db } from "../../firebaseConfig";
 import auth from "../../firebaseConfig";
 
@@ -14,10 +14,10 @@ export default function Friends() {
 
       snapshot.forEach((user) => {
         if (auth.currentUser.uid === user.val().senderid) {
-          friendsArr.push(user.val());
+          friendsArr.push({ ...user.val(), key: user.key });
         }
         if (auth.currentUser.uid === user.val().receiverid) {
-          friendsArr.push(user.val());
+          friendsArr.push({ ...user.val(), key: user.key });
         }
       });
 
@@ -25,31 +25,18 @@ export default function Friends() {
     });
   }, []);
 
-  //Decide What to render in Friends Name
-  let friendsName;
-
-  friends.map((fr) => {
-    if (auth.currentUser.uid === fr.senderid) {
-      friendsName = fr.receivername;
-    }
-    if (auth.currentUser.uid === fr.receiverid) {
-      friendsName = fr.sendername;
-    }
-    return friendsName;
-  });
-
-  //Decide What to render in Friends Image
-  let friendsImage;
-
-  friends.map((fr) => {
-    if (auth.currentUser.uid === fr.senderid) {
-      friendsImage = fr.receiverphoto;
-    }
-    if (auth.currentUser.uid === fr.receiverid) {
-      friendsImage = fr.senderphoto;
-    }
-    return friendsImage;
-  });
+  const handleBlock = (user) => {
+    set(push(ref(db, "blockedlist/")), {
+      blockedbyname: user.sendername,
+      blockedbyid: user.senderid,
+      blockedid: user.receiverid,
+      blockedname: user.receivername,
+      blockedphoto: user.receiverphoto,
+      blockedbyphoto: user.senderphoto,
+    }).then(() => {
+      remove(ref(db, "friends/" + user.key));
+    });
+  };
 
   return (
     <>
@@ -70,18 +57,40 @@ export default function Friends() {
             }`}
           >
             <img
-              src={friendsImage}
+              src={
+                (auth.currentUser.uid === friend.senderid &&
+                  friend.receiverphoto) ||
+                (auth.currentUser.uid === friend.receiverid &&
+                  friend.senderphoto)
+              }
               alt=""
               className="h-[50px] w-[50px] rounded-full"
             />
             <div>
-              <h2 className="text-base font-bold">{friendsName}</h2>
+              <h2 className="text-base font-bold">
+                {(auth.currentUser.uid === friend.senderid &&
+                  friend.receivername) ||
+                  (auth.currentUser.uid === friend.receiverid &&
+                    friend.sendername)}
+              </h2>
               <p className="text-sm text-gray-500">Hi guys, Whats up</p>
             </div>
 
-            <button className="bg-green-600 text-white px-4 py-2 rounded text-base">
-              Block
-            </button>
+            {auth.currentUser.uid === friend.senderid ? (
+              <button
+                className="bg-green-600 text-white px-4 py-2 rounded text-base"
+                onClick={() => handleBlock(friend)}
+              >
+                Block
+              </button>
+            ) : (
+              <button
+                className="bg-gray-600 text-white px-4 py-2 rounded text-base"
+                disabled="true"
+              >
+                Block
+              </button>
+            )}
           </div>
         ))}
       </div>
