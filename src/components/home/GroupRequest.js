@@ -9,9 +9,6 @@ import { db } from "../../firebaseConfig";
 //Firebase Import End
 import { PulseLoader } from "react-spinners";
 
-import { useDispatch, useSelector } from "react-redux";
-import { groupmembers } from "../../features/groupMembers/groupMemberSlice";
-
 export default function GroupRequest() {
   const [cropImage, setCropImage] = useState("");
   const [prevImage, setPrevImage] = useState("");
@@ -26,8 +23,6 @@ export default function GroupRequest() {
 
   const [show, setShow] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
-
-  const dispatch = useDispatch();
 
   useEffect(() => {
     const groupRef = ref(db, "group");
@@ -138,8 +133,6 @@ export default function GroupRequest() {
       reqphoto: auth.currentUser.photoURL,
       reqname: auth.currentUser.displayName,
     });
-
-    dispatch(groupmembers(auth.currentUser.uid));
   };
 
   return (

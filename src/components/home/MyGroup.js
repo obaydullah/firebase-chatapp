@@ -65,6 +65,7 @@ export default function MyGroup() {
 
   const handleRemoveMember = (member) => {
     remove(ref(db, "memberlist/" + member.key));
+    setInfoShow(false);
   };
 
   const handleRejectRequest = (group) => {
@@ -83,14 +84,6 @@ export default function MyGroup() {
       username: group.reqname,
       reqphoto: group.reqphoto,
     })
-      // .then(() => {
-      //   let memberArray = [group.reqid];
-      //   memberArray.push(group.reqid);
-
-      //   update(ref(db, "group/" + group.groupkey), {
-      //     members: memberArray,
-      //   });
-      // })
       .then(() => {
         remove(ref(db, "groupjoinrequest/" + group.key));
       })
@@ -173,7 +166,7 @@ export default function MyGroup() {
                   className="h-[50px] w-[50px] rounded-full"
                 />
                 <div className="sm:mr-0 sml:mr-auto sml:ml-3 mr-2">
-                  <h2 className="text-base font-bold"> {member.reqname}</h2>
+                  <h2 className="text-base font-bold"> {member.username}</h2>
                   <p className="text-sm text-gray-500">Whats up!</p>
                 </div>
 
