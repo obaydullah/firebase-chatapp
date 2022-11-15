@@ -7,6 +7,8 @@ import { useSelector } from "react-redux";
 import auth from "../../firebaseConfig";
 import { db } from "../../firebaseConfig";
 import { ref, set, push, onValue } from "firebase/database";
+import moment from "moment";
+moment.locale("en");
 
 export default function Chat() {
   const activeChatData = useSelector((state) => state.activeChat);
@@ -25,6 +27,9 @@ export default function Chat() {
       sendername: sendername,
       receiverid: receiverid,
       receivername: receivername,
+      date: `${new Date().getFullYear()}-${
+        new Date().getMonth() + 1
+      }-${new Date().getDate()} ${new Date().getHours()}:${new Date().getMinutes()}`,
     });
     setMsg("");
   };
@@ -72,8 +77,9 @@ export default function Chat() {
             {singleChat.map((chat, index) => (
               <div
                 key={index}
-                className={`text-left mt-2 ${
-                  auth.currentUser.uid === chat.senderid && "text-right"
+                className={`text-left mt-2 flex flex-col items-start ${
+                  auth.currentUser.uid === chat.senderid &&
+                  "text-right items-end"
                 }`}
               >
                 <p
@@ -84,6 +90,9 @@ export default function Chat() {
                   }`}
                 >
                   {chat.msg}
+                </p>
+                <p className="text-gray-500 inline-block rounded text-[12px]">
+                  {moment(chat.date).fromNow()}
                 </p>
               </div>
             ))}

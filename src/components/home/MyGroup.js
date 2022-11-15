@@ -83,6 +83,14 @@ export default function MyGroup() {
       username: group.reqname,
       reqphoto: group.reqphoto,
     })
+      // .then(() => {
+      //   let memberArray = [group.reqid];
+      //   memberArray.push(group.reqid);
+
+      //   update(ref(db, "group/" + group.groupkey), {
+      //     members: memberArray,
+      //   });
+      // })
       .then(() => {
         remove(ref(db, "groupjoinrequest/" + group.key));
       })
