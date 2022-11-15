@@ -14,16 +14,8 @@ export default function Chat() {
   const [msg, setMsg] = useState("");
   const [singleChat, setSingleChat] = useState([]);
 
-  const {
-    receiverid,
-    receiverphoto,
-    senderid,
-    senderphoto,
-    status,
-    receivername,
-    sendername,
-    photo,
-  } = activeChatData.value;
+  const { receiverid, senderid, status, receivername, sendername, photo } =
+    activeChatData.value;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -44,14 +36,10 @@ export default function Chat() {
 
       snapshot.forEach((user) => {
         if (
-          user.val().senderid === senderid &&
-          user.val().receiverid === receiverid
-        ) {
-          arr.push(user.val());
-        }
-        if (
-          user.val().senderid === receiverid &&
-          user.val().receiverid === senderid
+          (user.val().senderid === auth.currentUser.uid &&
+            user.val().receiverid === receiverid) ||
+          (user.val().senderid === receiverid &&
+            user.val().receiverid === senderid)
         ) {
           arr.push(user.val());
         }
@@ -59,9 +47,7 @@ export default function Chat() {
 
       setSingleChat(arr);
     });
-  }, [receiverid]);
-
-  console.log(auth.currentUser.uid);
+  }, [activeChatData.value, db, auth]);
 
   return (
     <div className="h-full grow border shadow-lg px-10">
@@ -84,8 +70,19 @@ export default function Chat() {
         {status === "single" ? (
           <div className="mb-auto mt-4 overflow-y-scroll">
             {singleChat.map((chat, index) => (
-              <div key={index} className="text-left mt-2">
-                <p className="text-base bg-gray-200 inline-block p-2 rounded">
+              <div
+                key={index}
+                className={`text-left mt-2 ${
+                  auth.currentUser.uid === chat.senderid && "text-right"
+                }`}
+              >
+                <p
+                  className={`${
+                    auth.currentUser.uid === chat.senderid
+                      ? "text-white bg-green-600 inline-block p-2 rounded"
+                      : "text-base bg-gray-200 inline-block p-2 rounded"
+                  }`}
+                >
                   {chat.msg}
                 </p>
               </div>
