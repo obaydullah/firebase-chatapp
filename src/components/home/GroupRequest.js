@@ -61,7 +61,7 @@ export default function GroupRequest() {
       let joinedString = "";
 
       snapshot.forEach((user) => {
-        if (auth.currentUser.uid === user.val().reqid) {
+        if (auth.currentUser.uid === user.val().userid) {
           joinedString += user.val().groupkey;
         }
       });
@@ -186,7 +186,6 @@ export default function GroupRequest() {
                   Admin : {group.adminname}
                 </p>
               </div>
-
               {pendingStr.includes(group.groupkey) &&
               pendingStr.includes(auth.currentUser.uid) ? (
                 <button className="bg-red-600 text-white px-4 py-2 rounded text-base">
@@ -206,6 +205,9 @@ export default function GroupRequest() {
               )}
             </div>
           ))}
+
+          <br />
+          <br />
         </div>
       </div>
 

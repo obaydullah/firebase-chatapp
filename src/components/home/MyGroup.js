@@ -55,12 +55,16 @@ export default function MyGroup() {
 
       snapshot.forEach((user) => {
         if (member.groupid === user.val().groupkey) {
-          memberArray.push(user.val());
+          memberArray.push({ ...user.val(), key: user.key });
         }
       });
 
       setMembersArr(memberArray);
     });
+  };
+
+  const handleRemoveMember = (member) => {
+    remove(ref(db, "memberlist/" + member.key));
   };
 
   const handleRejectRequest = (group) => {
@@ -75,8 +79,8 @@ export default function MyGroup() {
       groupTitle: group.groupTitle,
       groupimage: group.groupimage,
       groupkey: group.groupkey,
-      reqid: group.reqid,
-      reqname: group.reqname,
+      userid: group.reqid,
+      username: group.reqname,
       reqphoto: group.reqphoto,
     })
       .then(() => {
@@ -164,6 +168,13 @@ export default function MyGroup() {
                   <h2 className="text-base font-bold"> {member.reqname}</h2>
                   <p className="text-sm text-gray-500">Whats up!</p>
                 </div>
+
+                <button
+                  className="bg-red-600 text-white p-2 rounded"
+                  onClick={() => handleRemoveMember(member)}
+                >
+                  remove
+                </button>
               </div>
             ))}
           </>

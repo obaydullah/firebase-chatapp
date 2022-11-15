@@ -13,6 +13,8 @@ import Settings from "./pages/Settings";
 import PrivateRoute from "./PrivateRoutes/PrivateRoute";
 import PrivateLogin from "./PrivateRoutes/PrivateLogin";
 import PrivateRegistration from "./PrivateRoutes/PrivateRegistration";
+import { store } from "./app/store";
+import { Provider } from "react-redux";
 
 const router = createBrowserRouter([
   {
@@ -53,4 +55,8 @@ const router = createBrowserRouter([
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(<RouterProvider router={router} />);
+root.render(
+  <Provider store={store}>
+    <RouterProvider router={router} />
+  </Provider>
+);

@@ -1,17 +1,18 @@
 import React from "react";
+import Groups from "../../components/message/Groups";
+import Friends from "../../components/message/Friends";
+import Chat from "../../components/message/Chat";
 
 export default function Message() {
   return (
-    <div className="flex flex-col w-full h-screen">
-      <div className="flex justify-around">
-        <div className="w-[427px]">Home Left</div>
-        <div className="w-[344px]">Home Middle </div>
-        <div className="w-[344px]">Home Right</div>
+    <div className="flex w-full h-screen p-2 gap-4">
+      <div className="flex flex-col justify-between w-[30%]">
+        <Groups />
+
+        <Friends />
       </div>
-      <div className="flex justify-around">
-        <div className="w-[427px]">Home Bottom Left</div>
-        <div className="w-[344px]">Home Bottom Middle </div>
-        <div className="w-[344px]">Home Bottom Right</div>
+      <div className="grow">
+        <Chat />
       </div>
     </div>
   );
