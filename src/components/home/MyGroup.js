@@ -12,20 +12,44 @@ export default function MyGroup() {
   const [infoShow, setInfoShow] = useState(false);
   const [memberShow, setMemberShow] = useState(false);
 
+  const [allGroup, setAllGroup] = useState([]);
+
   useEffect(() => {
     const groupRef = ref(db, "group");
     onValue(groupRef, (snapshot) => {
       let groupArray = [];
 
+      let allGroup = [];
+
       snapshot.forEach((user) => {
         if (auth.currentUser.uid == user.val().adminid) {
           groupArray.push({ ...user.val(), groupid: user.key });
         }
+        allGroup.push({ ...user.val(), key: user.key });
       });
 
       setMyGroup(groupArray);
+      setAllGroup(allGroup);
     });
   }, []);
+
+  // console.log(
+  //   allGroup.map((item) => {
+  //     if (item.key === "-NGMLwiVP-w2aFli34s1") {
+  //       return item;
+  //     }
+  //   })
+  // );
+
+  // .then(() => {
+  //   allGroup.map((item) => {
+  //     if (group.groupkey === item.key) {
+  //       return update(ref(db, "group/" + group.groupkey), {
+  //         members: [...item.members, group.reqid],
+  //       });
+  //     }
+  //   });
+  // })
 
   const handleReqShow = (group) => {
     setInfoShow((prevState) => {
@@ -64,12 +88,28 @@ export default function MyGroup() {
   };
 
   const handleRemoveMember = (member) => {
-    remove(ref(db, "memberlist/" + member.key));
+    allGroup.map((item) => {
+      if (item.key == member.groupkey) {
+        let updatedArr = [...item.members];
+
+        if (updatedArr.includes(member.userid)) {
+          updatedArr.pop(member.userid);
+        }
+
+        update(ref(db, "group/" + member.groupkey), {
+          members: updatedArr,
+        }).then(() => {
+          remove(ref(db, "memberlist/" + member.key));
+        });
+      }
+    });
+
     setInfoShow(false);
   };
 
   const handleRejectRequest = (group) => {
     remove(ref(db, "groupjoinrequest/" + group.key));
+    setInfoShow(false);
   };
 
   const handleAcceptReq = (group) => {
@@ -84,6 +124,21 @@ export default function MyGroup() {
       username: group.reqname,
       reqphoto: group.reqphoto,
     })
+      .then(() => {
+        allGroup.map((item) => {
+          if (item.key == group.groupkey) {
+            if (item.members) {
+              update(ref(db, "group/" + group.groupkey), {
+                members: [...item.members, group.reqid],
+              });
+            } else {
+              update(ref(db, "group/" + group.groupkey), {
+                members: [group.reqid],
+              });
+            }
+          }
+        });
+      })
       .then(() => {
         remove(ref(db, "groupjoinrequest/" + group.key));
       })

@@ -53,7 +53,6 @@ export default function Friends() {
           auth.currentUser.uid === friend.senderid
             ? friend.receivername
             : friend.sendername,
-        status: "single",
         photo:
           auth.currentUser.uid === friend.senderid
             ? friend.receiverphoto

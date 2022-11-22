@@ -4,10 +4,17 @@ import { BsSearch } from "react-icons/bs";
 import auth from "../../firebaseConfig";
 import { db } from "../../firebaseConfig";
 import { onValue, ref } from "firebase/database";
+import { useDispatch } from "react-redux";
+import {
+  activeChat,
+  activeChatGroup,
+} from "../../features/activeChat/activeChatSlice";
 
 export default function Groups() {
+  const dispatch = useDispatch();
+
   const [groups, setGroups] = useState([]);
-  const [memberList, setMemberList] = useState([]);
+  // const [memberList, setMemberList] = useState([]);
 
   useEffect(() => {
     const usersRef = ref(db, "group/");
@@ -16,7 +23,13 @@ export default function Groups() {
 
       snapshot.forEach((user) => {
         if (auth.currentUser.uid === user.val().adminid) {
-          arr.push(user.val());
+          arr.push({ ...user.val(), groupkey: user.key });
+        }
+
+        if (user.val().members) {
+          if (user.val().members.includes(auth.currentUser.uid)) {
+            arr.push({ ...user.val(), groupkey: user.key });
+          }
         }
       });
 
@@ -24,20 +37,24 @@ export default function Groups() {
     });
   }, []);
 
-  useEffect(() => {
-    const memberRef = ref(db, "memberlist/");
-    onValue(memberRef, (snapshot) => {
-      let arr = [];
+  // useEffect(() => {
+  //   const memberRef = ref(db, "memberlist/");
+  //   onValue(memberRef, (snapshot) => {
+  //     let arr = [];
 
-      snapshot.forEach((user) => {
-        if (auth.currentUser.uid === user.val().userid) {
-          arr.push(user.val());
-        }
-      });
+  //     snapshot.forEach((user) => {
+  //       if (auth.currentUser.uid === user.val().userid) {
+  //         arr.push(user.val());
+  //       }
+  //     });
 
-      setMemberList(arr);
-    });
-  }, []);
+  //     setMemberList(arr);
+  //   });
+  // }, []);
+
+  const handleGroupChat = (group) => {
+    dispatch(activeChatGroup(group));
+  };
 
   return (
     <>
@@ -67,11 +84,10 @@ export default function Groups() {
         {groups.map((group, index) => (
           <div
             key={index}
-            className={`flex justify-between items-center border-b border-solid border-gray-300 py-2 ${
-              !memberList.length > 0 &&
-              index === groups.length - 1 &&
-              "border-b-0"
+            className={`flex justify-between items-center border-b border-solid border-gray-300 py-2 cursor-pointer ${
+              index === groups.length - 1 && "border-b-0"
             }`}
+            onClick={() => handleGroupChat(group)}
           >
             <img
               src={group.groupimage}
@@ -88,7 +104,7 @@ export default function Groups() {
           </div>
         ))}
 
-        {memberList.map((member, index) => (
+        {/* {memberList.map((member, index) => (
           <div
             key={index}
             className={`flex justify-between items-center border-b border-solid border-gray-300 py-2 ${
@@ -110,7 +126,7 @@ export default function Groups() {
               </p>
             </div>
           </div>
-        ))}
+        ))} */}
       </div>
     </>
   );

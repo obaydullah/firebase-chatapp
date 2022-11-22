@@ -1,0 +1,8 @@
+.emoji {
+  position: relative;
+}
+aside.EmojiPickerReact.epr-main {
+  position: absolute !important;
+  right: 0;
+  top: -27rem;
+}
