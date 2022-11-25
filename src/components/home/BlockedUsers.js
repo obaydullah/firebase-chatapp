@@ -21,7 +21,6 @@ export default function BlockedUsers() {
   }, []);
 
   const handleUnblock = (user) => {
-    console.log(user);
     set(push(ref(db, "friends/")), {
       sendername: user.blockedbyname,
       senderid: user.blockedbyid,
@@ -31,6 +30,32 @@ export default function BlockedUsers() {
       senderphoto: user.blockedbyphoto,
     }).then(() => {
       remove(ref(db, "blockedlist/" + user.key));
+    });
+
+    set(push(ref(db, "notification")), {
+      senderid: auth.currentUser.uid,
+      receiverid: user.blockedid,
+      message: `${user.blockedbyname} is unblocked ${user.blockedname}`,
+      date: `${new Date().getDate()}/${
+        new Date().getMonth() + 1
+      }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+    });
+
+    //Unreade notification
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key === user.blockedid) {
+          tempCountValue = item.val().count;
+        }
+      });
+    });
+
+    set(ref(db, "unread/" + user.blockedid), {
+      count: tempCountValue + 1,
     });
   };
 

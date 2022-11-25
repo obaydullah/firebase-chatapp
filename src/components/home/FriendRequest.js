@@ -10,6 +10,7 @@ export default function FriendRequest() {
   const [date, setDate] = useState(new Date().getDate());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
+  const [tempCount, setTempCount] = useState(0);
 
   useEffect(() => {
     const usersRef = ref(db, "friendrequest/");
@@ -37,6 +38,34 @@ export default function FriendRequest() {
       senderphoto: friends.senderphoto,
     }).then(() => {
       remove(ref(db, "friendrequest/" + friends.id));
+    });
+
+    set(push(ref(db, "notification")), {
+      senderid: auth.currentUser.uid,
+      receiverid: friends.senderid,
+      message: `${friends.receivername} accept ${friends.sendername} friend request`,
+      date: `${new Date().getDate()}/${
+        new Date().getMonth() + 1
+      }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+    });
+
+    //Unreade notification
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key === friends.senderid) {
+          tempCountValue = item.val().count;
+        }
+      });
+
+      setTempCount(tempCountValue);
+    });
+
+    set(ref(db, "unread/" + friends.senderid), {
+      count: tempCountValue + 1,
     });
   };
 

@@ -16,7 +16,7 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { onAuthStateChanged, updateProfile } from "firebase/auth";
 import { ref, uploadString, getDownloadURL } from "firebase/storage";
-import { ref as dbRef, onValue, update } from "firebase/database";
+import { ref as dbRef, onValue, update, remove } from "firebase/database";
 import auth from "../firebaseConfig";
 import { storage } from "../firebaseConfig";
 import { db } from "../firebaseConfig";
@@ -31,8 +31,25 @@ export default function Sidebar() {
   const [cropper, setCropper] = useState("");
   const [imageName, setImageName] = useState("");
 
+  const [unReadCount, setUnReadCount] = useState(0);
+
   const [show, setShow] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
+
+  useEffect(() => {
+    const unReadRef = dbRef(db, "unread/");
+
+    onValue(unReadRef, (snapshot) => {
+      let tempCountValue = 0;
+
+      snapshot.forEach((item) => {
+        if (item.key === auth.currentUser.uid) {
+          tempCountValue = item.val().count;
+        }
+      });
+      setUnReadCount(tempCountValue);
+    });
+  }, []);
 
   // Image Crop Start
   const cropperRef = useRef();
@@ -114,6 +131,12 @@ export default function Sidebar() {
     }
   };
 
+  const handleNotification = () => {
+    update(dbRef(db, "unread/" + auth.currentUser.uid), {
+      count: 0,
+    });
+  };
+
   return (
     <>
       <div className=" bg-green-600 text-white p-4 sm:fixed sm:left-0 sm:bottom-0 sm:w-screen sm:h-[55px] sml:w-[186px] sml:static sml:h-auto z-10">
@@ -166,15 +189,24 @@ export default function Sidebar() {
 
             <NavLink
               to="notification"
+              onClick={handleNotification}
               className={({ isActive, isPending }) =>
                 isActive
                   ? "bg-white text-green-600 w-full flex justify-center rounded py-3 mb-4 cursor-pointer relative after:absolute after:h-full after:w-[5%] after:top-0 after:right-0 after:content-[''] after:bg-green-600 after:rounded-tl-lg after:rounded-bl-lg p-2 sml:p-4"
                   : isPending
                   ? "pending"
-                  : "w-full flex justify-center py-3 mb-4 cursor-pointer p-2"
+                  : "w-full relative flex justify-center py-3 mb-4 cursor-pointer p-2"
               }
             >
               <AiFillNotification />
+
+              {unReadCount !== 0 ? (
+                <div className="absolute bottom-2 right-4 z-20 bg-red-500 text-white p-1 rounded">
+                  <p className="text-sm">{unReadCount}</p>
+                </div>
+              ) : (
+                ""
+              )}
             </NavLink>
 
             <NavLink

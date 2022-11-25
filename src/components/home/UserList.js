@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { BiDotsVerticalRounded } from "react-icons/bi";
-import { ref, onValue, set } from "firebase/database";
+import { ref, onValue, set, push } from "firebase/database";
 import { onAuthStateChanged } from "firebase/auth";
 import { db } from "../../firebaseConfig";
 import auth from "../../firebaseConfig";
@@ -11,6 +11,7 @@ export default function UserList() {
   const [friendStr, setFriendStr] = useState("");
   const [blockedStr, setBlockedStr] = useState("");
   const [currentUserPhoto, setCurrentUserPhoto] = useState("");
+  const [tempCount, setTempCount] = useState(0);
 
   useEffect(() => {
     onAuthStateChanged(auth, (user) => {
@@ -98,6 +99,34 @@ export default function UserList() {
       id: user.id,
       receiverphoto: user.profile_picture,
       senderphoto: currentUserPhoto,
+    });
+
+    set(push(ref(db, "notification")), {
+      senderid: auth.currentUser.uid,
+      receiverid: user.id,
+      message: `${auth.currentUser.displayName} sent friend request to ${user.username}`,
+      date: `${new Date().getDate()}/${
+        new Date().getMonth() + 1
+      }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+    });
+
+    //Unreade notification
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key === user.id) {
+          tempCountValue = item.val().count;
+        }
+      });
+
+      setTempCount(tempCountValue);
+    });
+
+    set(ref(db, "unread/" + user.id), {
+      count: tempCountValue + 1,
     });
   };
 

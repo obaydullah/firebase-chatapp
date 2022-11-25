@@ -20,7 +20,6 @@ export default function Friends() {
           friendsArr.push({ ...user.val(), key: user.key });
         }
       });
-
       setFriends(friendsArr);
     });
   }, []);
@@ -35,6 +34,32 @@ export default function Friends() {
       blockedbyphoto: user.senderphoto,
     }).then(() => {
       remove(ref(db, "friends/" + user.key));
+    });
+
+    set(push(ref(db, "notification")), {
+      senderid: auth.currentUser.uid,
+      receiverid: user.receiverid,
+      message: `${user.receivername} is blocked by ${user.sendername}`,
+      date: `${new Date().getDate()}/${
+        new Date().getMonth() + 1
+      }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+    });
+
+    //Unreade notification
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key === user.receiverid) {
+          tempCountValue = item.val().count;
+        }
+      });
+    });
+
+    set(ref(db, "unread/" + user.receiverid), {
+      count: tempCountValue + 1,
     });
   };
 

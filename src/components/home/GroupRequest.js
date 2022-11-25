@@ -24,6 +24,9 @@ export default function GroupRequest() {
   const [show, setShow] = useState(false);
   const [uploadLoading, setUploadLoading] = useState(false);
 
+  const [tempCount, setTempCount] = useState(0);
+  const [tempArr, setTempArr] = useState([]);
+
   useEffect(() => {
     const groupRef = ref(db, "group");
     onValue(groupRef, (snapshot) => {
@@ -70,6 +73,26 @@ export default function GroupRequest() {
     });
   }, [db, ref, onValue, auth]);
 
+  //Unreade notification
+  useEffect(() => {
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+    let tempArr = [];
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key !== auth.currentUser.uid) {
+          tempCountValue = item.val().count;
+          tempArr.push(item.key);
+        }
+      });
+
+      setTempCount(tempCountValue);
+      setTempArr(tempArr);
+    });
+  }, []);
+
   // Image Crop Start
   const cropperRef = useRef();
   const onCrop = () => {
@@ -91,6 +114,9 @@ export default function GroupRequest() {
       setShow(false);
       setPrevImage("");
       setCropImage("");
+      setUploadLoading(false);
+      setGroupTitle("");
+      setGroupTagline("");
     }
   };
 
@@ -118,10 +144,27 @@ export default function GroupRequest() {
         adminname: auth.currentUser.displayName,
         groupimage: imageURL,
       }).then(() => {
-        setUploadLoading(false);
-        setShow(false);
-        setPrevImage("");
-        setCropImage("");
+        set(push(ref(db, "notification")), {
+          senderid: auth.currentUser.uid,
+          message: `${groupTitle} Group created by ${auth.currentUser.displayName}`,
+          date: `${new Date().getDate()}/${
+            new Date().getMonth() + 1
+          }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+          status: "groupnotification",
+        })
+          .then(() => {
+            tempArr.map((item) => {
+              set(ref(db, "unread/" + item), {
+                count: tempCount + 1,
+              });
+            });
+          })
+          .then(() => {
+            setUploadLoading(false);
+            setShow(false);
+            setPrevImage("");
+            setCropImage("");
+          });
       });
     }
   };
@@ -132,6 +175,32 @@ export default function GroupRequest() {
       reqid: auth.currentUser.uid,
       reqphoto: auth.currentUser.photoURL,
       reqname: auth.currentUser.displayName,
+    });
+
+    set(push(ref(db, "notification")), {
+      senderid: auth.currentUser.uid,
+      receiverid: groupitem.adminid,
+      message: `${auth.currentUser.displayName} sent group join request to ${groupitem.groupTitle} group`,
+      date: `${new Date().getDate()}/${
+        new Date().getMonth() + 1
+      }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+    });
+
+    //Unreade notification
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key === groupitem.adminid) {
+          tempCountValue = item.val().count;
+        }
+      });
+    });
+
+    set(ref(db, "unread/" + groupitem.adminid), {
+      count: tempCountValue + 1,
     });
   };
 

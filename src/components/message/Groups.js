@@ -37,21 +37,6 @@ export default function Groups() {
     });
   }, []);
 
-  // useEffect(() => {
-  //   const memberRef = ref(db, "memberlist/");
-  //   onValue(memberRef, (snapshot) => {
-  //     let arr = [];
-
-  //     snapshot.forEach((user) => {
-  //       if (auth.currentUser.uid === user.val().userid) {
-  //         arr.push(user.val());
-  //       }
-  //     });
-
-  //     setMemberList(arr);
-  //   });
-  // }, []);
-
   const handleGroupChat = (group) => {
     dispatch(activeChatGroup(group));
   };

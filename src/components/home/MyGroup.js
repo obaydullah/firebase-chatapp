@@ -33,24 +33,6 @@ export default function MyGroup() {
     });
   }, []);
 
-  // console.log(
-  //   allGroup.map((item) => {
-  //     if (item.key === "-NGMLwiVP-w2aFli34s1") {
-  //       return item;
-  //     }
-  //   })
-  // );
-
-  // .then(() => {
-  //   allGroup.map((item) => {
-  //     if (group.groupkey === item.key) {
-  //       return update(ref(db, "group/" + group.groupkey), {
-  //         members: [...item.members, group.reqid],
-  //       });
-  //     }
-  //   });
-  // })
-
   const handleReqShow = (group) => {
     setInfoShow((prevState) => {
       return !prevState;
@@ -104,12 +86,64 @@ export default function MyGroup() {
       }
     });
 
+    set(push(ref(db, "notification")), {
+      senderid: auth.currentUser.uid,
+      receiverid: member.userid,
+      message: `${member.adminname} remove you from ${member.groupTitle} group`,
+      date: `${new Date().getDate()}/${
+        new Date().getMonth() + 1
+      }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+    });
+
+    //Unreade notification
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key === member.userid) {
+          tempCountValue = item.val().count;
+        }
+      });
+    });
+
+    set(ref(db, "unread/" + member.userid), {
+      count: tempCountValue + 1,
+    });
+
     setInfoShow(false);
   };
 
   const handleRejectRequest = (group) => {
     remove(ref(db, "groupjoinrequest/" + group.key));
     setInfoShow(false);
+
+    set(push(ref(db, "notification")), {
+      senderid: auth.currentUser.uid,
+      receiverid: group.reqid,
+      message: `${group.adminname} reject ${group.reqname} group join request`,
+      date: `${new Date().getDate()}/${
+        new Date().getMonth() + 1
+      }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+    });
+
+    //Unreade notification
+    const unReadRef = ref(db, "unread/");
+
+    let tempCountValue = 0;
+
+    onValue(unReadRef, (snapshot) => {
+      snapshot.forEach((item) => {
+        if (item.key === group.reqid) {
+          tempCountValue = item.val().count;
+        }
+      });
+    });
+
+    set(ref(db, "unread/" + group.reqid), {
+      count: tempCountValue + 1,
+    });
   };
 
   const handleAcceptReq = (group) => {
@@ -124,6 +158,34 @@ export default function MyGroup() {
       username: group.reqname,
       reqphoto: group.reqphoto,
     })
+      .then(() => {
+        set(push(ref(db, "notification")), {
+          senderid: auth.currentUser.uid,
+          receiverid: group.reqid,
+          message: `${group.adminname} accept ${group.reqname} group join request`,
+          date: `${new Date().getDate()}/${
+            new Date().getMonth() + 1
+          }/${new Date().getFullYear()} - ${new Date().toLocaleTimeString()}`,
+        });
+      })
+      .then(() => {
+        //Unreade notification
+        const unReadRef = ref(db, "unread/");
+
+        let tempCountValue = 0;
+
+        onValue(unReadRef, (snapshot) => {
+          snapshot.forEach((item) => {
+            if (item.key === group.reqid) {
+              tempCountValue = item.val().count;
+            }
+          });
+        });
+
+        set(ref(db, "unread/" + group.reqid), {
+          count: tempCountValue + 1,
+        });
+      })
       .then(() => {
         allGroup.map((item) => {
           if (item.key == group.groupkey) {
